@@ -29,8 +29,8 @@ and identify:
 
 ## Dashboard Links
 
-- **Dashboard webpage:** <https://deepakpamisetty.github.io/FUTURE_DS_03/dashboards/funnel_dashboard.html>
-- **Dashboard preview fallback:** <https://htmlpreview.github.io/?https://github.com/DeepakPamisetty/FUTURE_DS_03/blob/master/dashboards/funnel_dashboard.html>
+- **Dashboard webpage:** <https://htmlpreview.github.io/?https://github.com/DeepakPamisetty/FUTURE_DS_03/blob/master/dashboards/funnel_dashboard.html>
+- **GitHub Pages URL:** <https://deepakpamisetty.github.io/FUTURE_DS_03/dashboards/funnel_dashboard.html> (works after GitHub Pages is enabled for this repository)
 - [Open the HTML dashboard](dashboards/funnel_dashboard.html)
 - [View the dashboard CSS](assets/dashboard.css)
 - [Read the funnel report](reports/funnel_analysis_report.md)
