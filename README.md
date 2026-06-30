@@ -20,12 +20,21 @@ and identify:
 
 ## Deliverables
 
-- `dashboards/funnel_dashboard.html` - presentation-ready business dashboard
-- `reports/funnel_analysis_report.md` - written funnel analysis report
-- `slides/ga_funnel_business_presentation.pptx` - executive presentation deck
+- [Business funnel dashboard](dashboards/funnel_dashboard.html) - presentation-ready HTML dashboard
+- [Funnel analysis report](reports/funnel_analysis_report.md) - written funnel analysis report
+- [Executive presentation deck](slides/ga_funnel_business_presentation.pptx) - PowerPoint business presentation
 - `data/processed/*.csv` - generated funnel, channel, campaign, and monthly metrics
 - `src/funnel_analysis.py` - reproducible analysis pipeline
 - `slides/build_presentation.mjs` - reproducible deck generation script
+
+## Dashboard Links
+
+- [Open the HTML dashboard](dashboards/funnel_dashboard.html)
+- [View the dashboard CSS](assets/dashboard.css)
+- [Read the funnel report](reports/funnel_analysis_report.md)
+- [Download the PowerPoint deck](slides/ga_funnel_business_presentation.pptx)
+- [Review channel metrics](data/processed/channel_metrics.csv)
+- [Review campaign metrics](data/processed/campaign_metrics.csv)
 
 ## Dataset Setup
 
@@ -87,7 +96,7 @@ Open:
 dashboards/funnel_dashboard.html
 ```
 
-The dashboard is standalone HTML/CSS and can be hosted with GitHub Pages.
+The dashboard is standalone HTML/CSS and can be hosted with GitHub Pages. If GitHub Pages is enabled for this repository, use the Pages URL for `dashboards/funnel_dashboard.html`.
 
 ## Key Business Questions Answered
 
@@ -105,4 +114,3 @@ The pipeline writes recommendations dynamically based on the channel and funnel 
 - Improve landing pages for high-traffic but low-conversion channels
 - Build remarketing for engaged leads who do not purchase
 - Track funnel quality weekly by channel, campaign, device, and geography
-

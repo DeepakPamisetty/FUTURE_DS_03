@@ -312,6 +312,21 @@ def _bar_rows(df: pd.DataFrame, metric: str, label: str, formatter) -> str:
     return "\n".join(rows)
 
 
+def _table_rows(df: pd.DataFrame, columns: list[tuple[str, str, callable | None]]) -> str:
+    rows = []
+    for _, row in df.iterrows():
+        cells = []
+        for key, _, formatter in columns:
+            value = row[key]
+            cells.append(f"<td>{formatter(value) if formatter else value}</td>")
+        rows.append(f"<tr>{''.join(cells)}</tr>")
+    return "\n".join(rows)
+
+
+def _table_header(columns: list[tuple[str, str, callable | None]]) -> str:
+    return "".join(f"<th>{label}</th>" for _, label, _ in columns)
+
+
 def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: list[str]) -> None:
     funnel = metrics["funnel"]
     channel = metrics["channel"]
@@ -325,6 +340,8 @@ def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: li
     assert isinstance(summary, dict)
 
     top_channels = channel.head(8)
+    quality_channels = channel.sort_values("visitor_to_customer_rate", ascending=False).head(8)
+    lead_channels = channel.sort_values("traffic_to_lead_rate", ascending=False).head(8)
     months = monthly.tail(12)
     max_month_customers = max(float(months["customers"].max()), 1)
     points = []
@@ -332,6 +349,13 @@ def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: li
         x = 40 + i * (520 / max(len(months) - 1, 1))
         y = 220 - (float(row["customers"]) / max_month_customers * 160)
         points.append(f"{x:.1f},{y:.1f}")
+
+    max_month_leads = max(float(months["leads"].max()), 1)
+    lead_points = []
+    for i, row in months.reset_index(drop=True).iterrows():
+        x = 40 + i * (520 / max(len(months) - 1, 1))
+        y = 220 - (float(row["leads"]) / max_month_leads * 160)
+        lead_points.append(f"{x:.1f},{y:.1f}")
 
     funnel_blocks = []
     max_stage = float(funnel["count"].max())
@@ -347,6 +371,23 @@ def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: li
             """
         )
 
+    channel_columns = [
+        ("channel", "Channel", None),
+        ("visitors", "Visitors", _fmt_int),
+        ("leads", "Leads", _fmt_int),
+        ("customers", "Customers", _fmt_int),
+        ("visitor_to_customer_rate", "V->C", _fmt_pct),
+    ]
+    campaign_columns = [
+        ("campaign", "Campaign", None),
+        ("channel", "Channel", None),
+        ("customers", "Customers", _fmt_int),
+        ("revenue_usd", "Revenue", lambda value: f"${value:,.0f}"),
+    ]
+    best_quality = quality_channels.iloc[0]
+    best_lead = lead_channels.iloc[0]
+    top_campaign = campaign.iloc[0] if not campaign.empty else {"campaign": "n/a", "customers": 0}
+
     html = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -356,62 +397,107 @@ def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: li
   <link rel="stylesheet" href="../assets/dashboard.css">
 </head>
 <body>
-  <main>
-    <section class="hero">
+  <main class="dashboard-shell">
+    <header class="dashboard-title">
       <div>
-        <p class="eyebrow">Marketing funnel analysis</p>
+        <p class="eyebrow">Marketing & lead funnel dashboard</p>
         <h1>Google Analytics Customer Revenue Prediction</h1>
-        <p class="subtitle">Visitor -> lead -> customer performance by channel, campaign, and month.</p>
       </div>
       <div class="source-note">{summary['data_source_note']}</div>
-    </section>
+    </header>
 
     <section class="kpi-grid">
-      <article><span>Visitors</span><strong>{_fmt_int(summary['visitors'])}</strong></article>
-      <article><span>Leads</span><strong>{_fmt_int(summary['leads'])}</strong><em>{_fmt_pct(summary['traffic_to_lead_rate'])}</em></article>
-      <article><span>Customers</span><strong>{_fmt_int(summary['customers'])}</strong><em>{_fmt_pct(summary['lead_to_customer_rate'])}</em></article>
+      <article><span>Total Visitors</span><strong>{_fmt_int(summary['visitors'])}</strong><em>sessions analyzed</em></article>
+      <article><span>Qualified Leads</span><strong>{_fmt_int(summary['leads'])}</strong><em>{_fmt_pct(summary['traffic_to_lead_rate'])} traffic-to-lead</em></article>
+      <article><span>Customers</span><strong>{_fmt_int(summary['customers'])}</strong><em>{_fmt_pct(summary['lead_to_customer_rate'])} lead-to-customer</em></article>
       <article><span>Revenue</span><strong>${summary['revenue_usd']:,.0f}</strong><em>{_fmt_pct(summary['visitor_to_customer_rate'])} visitor conversion</em></article>
     </section>
 
-    <section class="panel">
-      <div class="section-title">
-        <h2>Funnel Conversion</h2>
-        <p>Largest drop-off: {summary['largest_dropoff_stage']}</p>
-      </div>
-      <div class="funnel">{''.join(funnel_blocks)}</div>
-    </section>
+    <div class="dashboard-grid">
+      <section class="left-board">
+        <section class="panel panel-wide">
+          <div class="section-title">
+            <h2>Funnel Conversion</h2>
+            <p>Largest drop-off: {summary['largest_dropoff_stage']}</p>
+          </div>
+          <div class="funnel">{''.join(funnel_blocks)}</div>
+        </section>
 
-    <section class="two-col">
-      <article class="panel">
-        <div class="section-title"><h2>Lead Quality by Channel</h2><p>Visitor-to-customer rate</p></div>
-        {_bar_rows(top_channels, 'visitor_to_customer_rate', 'channel', _fmt_pct)}
-      </article>
-      <article class="panel">
-        <div class="section-title"><h2>Lead Capture by Channel</h2><p>Traffic-to-lead rate</p></div>
-        {_bar_rows(top_channels.sort_values('traffic_to_lead_rate', ascending=False), 'traffic_to_lead_rate', 'channel', _fmt_pct)}
-      </article>
-    </section>
+        <section class="panel">
+          <div class="section-title"><h2>Lead Quality by Channel</h2><p>Visitor-to-customer rate</p></div>
+          {_bar_rows(quality_channels, 'visitor_to_customer_rate', 'channel', _fmt_pct)}
+        </section>
 
-    <section class="two-col">
-      <article class="panel">
-        <div class="section-title"><h2>Customers by Month</h2><p>Recent 12-month trend</p></div>
-        <svg viewBox="0 0 600 260" class="line-chart" role="img" aria-label="Customers by month">
-          <polyline points="{' '.join(points)}"></polyline>
-          {''.join(f'<circle cx="{p.split(",")[0]}" cy="{p.split(",")[1]}" r="4"></circle>' for p in points)}
-        </svg>
-      </article>
-      <article class="panel">
-        <div class="section-title"><h2>Top Campaigns</h2><p>Customers generated</p></div>
-        {_bar_rows(campaign.head(8), 'customers', 'campaign', _fmt_int)}
-      </article>
-    </section>
+        <section class="panel">
+          <div class="section-title"><h2>Lead Capture by Channel</h2><p>Traffic-to-lead rate</p></div>
+          {_bar_rows(lead_channels, 'traffic_to_lead_rate', 'channel', _fmt_pct)}
+        </section>
 
-    <section class="panel">
-      <div class="section-title"><h2>Action Plan</h2><p>Recommendations to improve conversion</p></div>
-      <ol class="recommendations">
-        {''.join(f'<li>{rec}</li>' for rec in recommendations)}
-      </ol>
-    </section>
+        <section class="panel">
+          <div class="section-title"><h2>Leads and Customers by Month</h2><p>Recent 12-month trend</p></div>
+          <svg viewBox="0 0 600 260" class="line-chart" role="img" aria-label="Leads and customers by month">
+            <polyline class="lead-line" points="{' '.join(lead_points)}"></polyline>
+            <polyline class="customer-line" points="{' '.join(points)}"></polyline>
+            {''.join(f'<circle class="lead-dot" cx="{p.split(",")[0]}" cy="{p.split(",")[1]}" r="3"></circle>' for p in lead_points)}
+            {''.join(f'<circle class="customer-dot" cx="{p.split(",")[0]}" cy="{p.split(",")[1]}" r="4"></circle>' for p in points)}
+          </svg>
+          <div class="legend"><span class="lead-key"></span> Leads <span class="customer-key"></span> Customers</div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title"><h2>Top Campaigns Table</h2><p>Customer generation</p></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>{_table_header(campaign_columns)}</tr></thead>
+              <tbody>{_table_rows(campaign.head(8), campaign_columns)}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-title"><h2>Channel Detail</h2><p>Funnel metrics</p></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>{_table_header(channel_columns)}</tr></thead>
+              <tbody>{_table_rows(top_channels, channel_columns)}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel insight-panel">
+          <div class="section-title"><h2>Business Insights</h2><p>What the funnel says</p></div>
+          <ul>
+            <li>The biggest conversion loss is <strong>{summary['largest_dropoff_stage']}</strong>, so the next improvement cycle should focus there first.</li>
+            <li><strong>{best_quality['channel']}</strong> brings the highest-quality traffic at {_fmt_pct(best_quality['visitor_to_customer_rate'])} visitor-to-customer conversion.</li>
+            <li><strong>{best_lead['channel']}</strong> is the strongest lead-capture benchmark at {_fmt_pct(best_lead['traffic_to_lead_rate'])} traffic-to-lead conversion.</li>
+          </ul>
+        </section>
+
+        <section class="panel insight-panel">
+          <div class="section-title"><h2>Recommendations</h2><p>Actionable next steps</p></div>
+          <ul>
+            {''.join(f'<li>{rec}</li>' for rec in recommendations[:4])}
+          </ul>
+        </section>
+      </section>
+
+      <aside class="right-rail">
+        <section class="rail-panel">
+          <h3>Channel Focus</h3>
+          {''.join(f'<div class="filter-pill">{row["channel"]}</div>' for _, row in channel.head(6).iterrows())}
+        </section>
+        <section class="rail-panel highlight">
+          <h3>Best Quality Channel</h3>
+          <strong>{best_quality['channel']}</strong>
+          <span>{_fmt_pct(best_quality['visitor_to_customer_rate'])}</span>
+        </section>
+        <section class="rail-panel highlight">
+          <h3>Top Campaign</h3>
+          <strong>{top_campaign['campaign']}</strong>
+          <span>{_fmt_int(top_campaign['customers'])} customers</span>
+        </section>
+      </aside>
+    </div>
   </main>
 </body>
 </html>"""
@@ -422,75 +508,116 @@ def write_dashboard(metrics: dict[str, pd.DataFrame | dict], recommendations: li
 def write_css() -> None:
     css = """
 :root {
-  --ink: #111111;
-  --muted: #5f6368;
-  --line: #d8dce2;
-  --panel: #f4f5f6;
-  --accent: #e85d35;
-  --accent-dark: #9d321a;
-  --green: #1b7f5a;
+  --ink: #13202c;
+  --muted: #5a6775;
+  --page: #e7f3f1;
+  --panel: #fbfdfc;
+  --panel-soft: #eef7f5;
+  --line: #2f4f5f;
+  --grid: #d4e4e1;
+  --accent: #6157c9;
+  --accent-2: #008f86;
+  --accent-3: #d78c28;
+  --danger: #b64f6f;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--page);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-main { width: min(1180px, calc(100vw - 32px)); margin: 0 auto; padding: 32px 0 48px; }
-.hero {
+.dashboard-shell { width: min(1240px, calc(100vw - 28px)); margin: 0 auto; padding: 18px 0 36px; }
+.dashboard-title {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 32px;
-  align-items: end;
-  border-bottom: 1px solid var(--line);
-  padding: 24px 0 30px;
-}
-.eyebrow { margin: 0 0 10px; color: var(--accent-dark); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
-h1 { margin: 0; font-size: clamp(34px, 5vw, 64px); line-height: .98; letter-spacing: 0; max-width: 840px; }
-.subtitle { color: var(--muted); font-size: 20px; margin: 18px 0 0; }
-.source-note { color: var(--muted); font-size: 14px; line-height: 1.45; text-align: right; }
-.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 22px 0; }
-.kpi-grid article, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
-.kpi-grid article { padding: 20px; min-height: 128px; }
-.kpi-grid span, .kpi-grid em { display: block; color: var(--muted); font-style: normal; }
-.kpi-grid strong { display: block; margin: 18px 0 6px; font-size: 38px; line-height: 1; }
-.panel { padding: 24px; margin-top: 18px; }
-.section-title { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 20px; }
-h2 { margin: 0; font-size: 28px; }
-.section-title p { margin: 0; color: var(--muted); }
-.funnel { overflow-x: auto; padding: 8px 0 2px; }
-.funnel-stage {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr 360px;
   gap: 18px;
   align-items: center;
-  background: #111;
+  padding: 18px 20px;
+  background: linear-gradient(90deg, #253858, #315d65);
+  border: 2px solid var(--line);
+  border-radius: 6px;
   color: #fff;
-  margin-bottom: 10px;
-  padding: 16px 22px;
-  min-width: 360px;
 }
-.funnel-stage:nth-child(2) { background: var(--accent); }
-.funnel-stage:nth-child(3) { background: var(--green); }
+.eyebrow { margin: 0 0 6px; color: #c9e8e3; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
+h1 { margin: 0; font-size: clamp(28px, 3.6vw, 46px); line-height: 1.02; letter-spacing: 0; }
+.source-note { color: #e9f6f3; font-size: 13px; line-height: 1.4; text-align: right; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+.kpi-grid article, .panel, .rail-panel { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; box-shadow: 0 1px 0 rgba(19, 32, 44, .08); }
+.kpi-grid article { padding: 14px 16px; min-height: 98px; }
+.kpi-grid span, .kpi-grid em { display: block; color: var(--muted); font-style: normal; font-size: 14px; }
+.kpi-grid strong { display: block; margin: 10px 0 4px; font-size: 31px; line-height: 1; color: var(--accent); }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 132px; gap: 8px; align-items: start; }
+.left-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.panel { padding: 12px; min-height: 250px; }
+.panel-wide { grid-column: 1 / -1; min-height: 230px; }
+.section-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; border-bottom: 1px solid var(--grid); padding-bottom: 8px; margin-bottom: 12px; }
+h2 { margin: 0; font-size: 20px; text-align: center; flex: 1; }
+.section-title p { margin: 0; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.funnel { overflow-x: auto; padding: 6px 0 0; }
+.funnel-stage {
+  display: grid;
+  grid-template-columns: minmax(96px, 1fr) minmax(150px, auto) minmax(62px, auto);
+  gap: 14px;
+  align-items: center;
+  background: var(--accent);
+  color: #fff;
+  margin: 0 auto 8px;
+  padding: 12px 18px;
+  min-width: 360px;
+  border-radius: 4px;
+}
+.funnel-stage:nth-child(2) { background: var(--accent-2); }
+.funnel-stage:nth-child(3) { background: var(--accent-3); }
 .funnel-stage span { font-weight: 800; }
-.funnel-stage strong { font-size: 30px; }
-.funnel-stage em { font-style: normal; opacity: .86; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.bar-row { display: grid; grid-template-columns: 150px 1fr 70px; gap: 12px; align-items: center; margin: 12px 0; }
+.funnel-stage strong { font-size: 25px; order: 3; text-align: right; }
+.funnel-stage em { font-style: normal; opacity: .86; order: 2; text-align: right; }
+.bar-row { display: grid; grid-template-columns: 134px 1fr 58px; gap: 10px; align-items: center; margin: 10px 0; }
 .bar-label { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar-track { height: 14px; background: #fff; border: 1px solid var(--line); }
-.bar-track span { display: block; height: 100%; background: var(--accent); }
+.bar-track { height: 13px; background: var(--panel-soft); border: 1px solid var(--grid); }
+.bar-track span { display: block; height: 100%; background: var(--accent-2); }
 .bar-value { text-align: right; color: var(--muted); font-weight: 700; }
-.line-chart { width: 100%; height: 260px; background: #fff; border: 1px solid var(--line); }
-.line-chart polyline { fill: none; stroke: var(--accent); stroke-width: 4; }
-.line-chart circle { fill: var(--ink); }
-.recommendations { margin: 0; padding-left: 24px; font-size: 18px; line-height: 1.55; }
-.recommendations li { margin: 10px 0; }
-@media (max-width: 860px) {
-  .hero, .two-col, .kpi-grid { grid-template-columns: 1fr; }
+.line-chart { width: 100%; height: 220px; background: #fff; border: 1px solid var(--grid); }
+.line-chart polyline { fill: none; stroke-width: 4; }
+.lead-line { stroke: var(--accent); }
+.customer-line { stroke: var(--accent-3); }
+.lead-dot { fill: var(--accent); }
+.customer-dot { fill: var(--accent-3); }
+.legend { display: flex; justify-content: center; gap: 14px; align-items: center; color: var(--muted); font-weight: 700; font-size: 13px; }
+.legend span { width: 18px; height: 5px; display: inline-block; border-radius: 4px; }
+.lead-key { background: var(--accent); }
+.customer-key { background: var(--accent-3); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #dcefeb; color: var(--ink); text-align: left; padding: 9px 8px; }
+td { padding: 8px; border-bottom: 1px solid var(--grid); }
+td:not(:first-child), th:not(:first-child) { text-align: right; }
+.insight-panel { min-height: 250px; }
+.insight-panel ul { margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.45; }
+.insight-panel li { margin: 9px 0; }
+.right-rail { display: grid; gap: 8px; position: sticky; top: 10px; }
+.rail-panel { padding: 8px; text-align: center; }
+.rail-panel h3 { margin: 0 0 8px; font-size: 16px; }
+.filter-pill {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin: 7px 0;
+  background: #f5fbff;
+  border: 1px solid #aac5d5;
+  border-radius: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+.rail-panel.highlight strong { display: block; font-size: 16px; line-height: 1.2; }
+.rail-panel.highlight span { display: block; margin-top: 10px; padding: 10px 6px; background: #fff5df; border: 1px solid #dfbd75; border-radius: 8px; font-weight: 800; }
+@media (max-width: 980px) {
+  .dashboard-title, .dashboard-grid, .left-board, .kpi-grid { grid-template-columns: 1fr; }
   .source-note { text-align: left; }
   .bar-row { grid-template-columns: 110px 1fr 58px; }
+  .right-rail { position: static; }
 }
 """
     (ROOT / "assets").mkdir(exist_ok=True)
