@@ -1,0 +1,11 @@
+{
+  "visitors": 2500,
+  "leads": 1685,
+  "customers": 55,
+  "revenue_usd": 586.4499999999999,
+  "traffic_to_lead_rate": 0.674,
+  "lead_to_customer_rate": 0.032640949554896145,
+  "visitor_to_customer_rate": 0.022,
+  "largest_dropoff_stage": "Leads to customers",
+  "data_source_note": "Offline sample generated because Kaggle competition data was not available locally"
+}

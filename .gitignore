@@ -1,0 +1,7 @@
+data/raw/*.csv
+data/raw/*.zip
+data/raw/ga-customer-revenue-prediction/
+*.pyc
+__pycache__/
+.DS_Store
+*.inspect.ndjson

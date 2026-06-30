@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GA Customer Revenue Funnel Dashboard</title>
+  <link rel="stylesheet" href="../assets/dashboard.css">
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Marketing funnel analysis</p>
+        <h1>Google Analytics Customer Revenue Prediction</h1>
+        <p class="subtitle">Visitor -> lead -> customer performance by channel, campaign, and month.</p>
+      </div>
+      <div class="source-note">Offline sample generated because Kaggle competition data was not available locally</div>
+    </section>
+
+    <section class="kpi-grid">
+      <article><span>Visitors</span><strong>2,500</strong></article>
+      <article><span>Leads</span><strong>1,685</strong><em>67.4%</em></article>
+      <article><span>Customers</span><strong>55</strong><em>3.3%</em></article>
+      <article><span>Revenue</span><strong>$586</strong><em>2.2% visitor conversion</em></article>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>Funnel Conversion</h2>
+        <p>Largest drop-off: Leads to customers</p>
+      </div>
+      <div class="funnel">
+            <div class="funnel-stage" style="width:820px;margin-left:40px">
+              <span>Visitors</span><strong>2,500</strong>
+              <em>100.0% stage conversion</em>
+            </div>
+            
+            <div class="funnel-stage" style="width:650px;margin-left:125px">
+              <span>Leads</span><strong>1,685</strong>
+              <em>67.4% stage conversion</em>
+            </div>
+            
+            <div class="funnel-stage" style="width:311px;margin-left:294px">
+              <span>Customers</span><strong>55</strong>
+              <em>3.3% stage conversion</em>
+            </div>
+            </div>
+    </section>
+
+    <section class="two-col">
+      <article class="panel">
+        <div class="section-title"><h2>Lead Quality by Channel</h2><p>Visitor-to-customer rate</p></div>
+        
+            <div class="bar-row">
+              <div class="bar-label">Organic Search</div>
+              <div class="bar-track"><span style="width:34.0%"></span></div>
+              <div class="bar-value">1.6%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Paid Search</div>
+              <div class="bar-track"><span style="width:62.8%"></span></div>
+              <div class="bar-value">3.0%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Referral</div>
+              <div class="bar-track"><span style="width:100.0%"></span></div>
+              <div class="bar-value">4.8%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Direct</div>
+              <div class="bar-track"><span style="width:40.8%"></span></div>
+              <div class="bar-value">1.9%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Social</div>
+              <div class="bar-track"><span style="width:21.0%"></span></div>
+              <div class="bar-value">1.0%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Display</div>
+              <div class="bar-track"><span style="width:4.0%"></span></div>
+              <div class="bar-value">0.0%</div>
+            </div>
+            
+      </article>
+      <article class="panel">
+        <div class="section-title"><h2>Lead Capture by Channel</h2><p>Traffic-to-lead rate</p></div>
+        
+            <div class="bar-row">
+              <div class="bar-label">Paid Search</div>
+              <div class="bar-track"><span style="width:100.0%"></span></div>
+              <div class="bar-value">68.7%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Referral</div>
+              <div class="bar-track"><span style="width:99.6%"></span></div>
+              <div class="bar-value">68.4%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Social</div>
+              <div class="bar-track"><span style="width:98.8%"></span></div>
+              <div class="bar-value">67.8%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Direct</div>
+              <div class="bar-track"><span style="width:98.2%"></span></div>
+              <div class="bar-value">67.4%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Organic Search</div>
+              <div class="bar-track"><span style="width:97.4%"></span></div>
+              <div class="bar-value">66.9%</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">Display</div>
+              <div class="bar-track"><span style="width:90.2%"></span></div>
+              <div class="bar-value">62.0%</div>
+            </div>
+            
+      </article>
+    </section>
+
+    <section class="two-col">
+      <article class="panel">
+        <div class="section-title"><h2>Customers by Month</h2><p>Recent 12-month trend</p></div>
+        <svg viewBox="0 0 600 260" class="line-chart" role="img" aria-label="Customers by month">
+          <polyline points="40.0,60.0 87.3,60.0 134.5,151.4 181.8,174.3 229.1,82.9 276.4,82.9 323.6,151.4 370.9,105.7 418.2,128.6 465.5,197.1 512.7,60.0 560.0,128.6"></polyline>
+          <circle cx="40.0" cy="60.0" r="4"></circle><circle cx="87.3" cy="60.0" r="4"></circle><circle cx="134.5" cy="151.4" r="4"></circle><circle cx="181.8" cy="174.3" r="4"></circle><circle cx="229.1" cy="82.9" r="4"></circle><circle cx="276.4" cy="82.9" r="4"></circle><circle cx="323.6" cy="151.4" r="4"></circle><circle cx="370.9" cy="105.7" r="4"></circle><circle cx="418.2" cy="128.6" r="4"></circle><circle cx="465.5" cy="197.1" r="4"></circle><circle cx="512.7" cy="60.0" r="4"></circle><circle cx="560.0" cy="128.6" r="4"></circle>
+        </svg>
+      </article>
+      <article class="panel">
+        <div class="section-title"><h2>Top Campaigns</h2><p>Customers generated</p></div>
+        
+            <div class="bar-row">
+              <div class="bar-label">content syndication</div>
+              <div class="bar-track"><span style="width:100.0%"></span></div>
+              <div class="bar-value">6</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">(not set)</div>
+              <div class="bar-track"><span style="width:83.3%"></span></div>
+              <div class="bar-value">5</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">summer remarketing</div>
+              <div class="bar-track"><span style="width:66.7%"></span></div>
+              <div class="bar-value">4</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">(not set)</div>
+              <div class="bar-track"><span style="width:66.7%"></span></div>
+              <div class="bar-value">4</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">content syndication</div>
+              <div class="bar-track"><span style="width:66.7%"></span></div>
+              <div class="bar-value">4</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">partner launch</div>
+              <div class="bar-track"><span style="width:50.0%"></span></div>
+              <div class="bar-value">3</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">content syndication</div>
+              <div class="bar-track"><span style="width:50.0%"></span></div>
+              <div class="bar-value">3</div>
+            </div>
+            
+
+            <div class="bar-row">
+              <div class="bar-label">(not set)</div>
+              <div class="bar-track"><span style="width:50.0%"></span></div>
+              <div class="bar-value">3</div>
+            </div>
+            
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>Action Plan</h2><p>Recommendations to improve conversion</p></div>
+      <ol class="recommendations">
+        <li>Prioritize Referral for qualified acquisition; it has the strongest visitor-to-customer conversion at 4.8%.</li><li>Use Paid Search landing-page and messaging patterns as a lead-capture benchmark because it converts traffic to leads at 68.7%.</li><li>Audit Organic Search spend and landing pages; its conversion quality trails the portfolio at 1.6%.</li><li>The biggest bottleneck is sales qualification; add remarketing, cart recovery, and high-intent follow-up for engaged non-buyers.</li><li>Track the funnel weekly by channel, campaign, device, and country so budget shifts are based on lead quality rather than traffic volume alone.</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>
